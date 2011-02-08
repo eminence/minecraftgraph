@@ -18,14 +18,95 @@
   <body>
       <div style="width: 100%; background:#eee;">
           Mineral: <select onchange="selectMineral(this)">
-                <option value="0">Air</option>
-                <option value="1">Stone</option>
+                <option value="0">0: Air</option>
+                <option value="1">1: Stone</option>
+                <option value="2" selected="true">2: Grass</option>
+                <option value="3">3: Dirt</option>
+                <option value="4">4: Cobblestone</option>
+                <option value="5">5: Wooden Plank</option>
+                <option value="6">6: Sapling</option>
+                <option value="7">7: Bedrock</option>
+                <option value="8">8: Water</option>
+                <option value="9">9: Stationary water</option>
+                <option value="10">10: Lava</option>
+                <option value="11">11: Stationary lava</option>
+                <option value="12">12: Sand</option>
+                <option value="13">13: Gravel</option>
+                <option value="14">14: Gold ore</option>
+                <option value="15">15: Iron ore</option>
+                <option value="16">16: Coal ore</option>
+                <option value="17">17: Wood</option>
+                <option value="18">18: Leaves</option>
+                <option value="19">19: Sponge</option>
+                <option value="20">10: Glass</option>
+                <option value="21">21: Lapis Lazuli Ore</option>
+                <option value="22">22: Lapis Lazuli Block</option>
+                <option value="23">23: Dispenser</option>
+                <option value="24">24: Sandstone</option>
+                <option value="25">25: Note Block</option>
+                <option value="35">35: 35: Wool</option>
+                <option value="37">37: Yellow flower</option>
+                <option value="38">38: Red rose</option>
+                <option value="39">39: Brown Mushroom</option>
+                <option value="40">40: Red Mushroom</option>
+                <option value="41">41: Gold Block</option>
+                <option value="42">42: Iron Block</option>
+                <option value="43">43: Double Stone Slab</option>
+                <option value="44">44: Stone Slab</option>
+                <option value="45">45: Brick Block</option>
+                <option value="46">46: TNT</option>
+                <option value="47">47: Bookshelf</option>
+                <option value="48">48: Moss Stone</option>
+                <option value="49">49: Obsidian</option>
+                <option value="50">50: Torch</option>
+                <option value="51">51: Fire</option>
+                <option value="52">52: Monster Spawner</option>
+                <option value="53">53: Wooden Stairs</option>
+                <option value="54">54: Chest</option>
+                <option value="55">55: Redstone Wire</option>
+                <option value="56">56: Diamond Ore</option>
+                <option value="57">57: Diamond Block</option>
+                <option value="58">58: Workbench</option>
+                <option value="59">59: Crops</option>
+                <option value="60">60: Farmland</option>
+                <option value="61">61: Furnace</option>
+                <option value="62">62: Burning Furnace</option>
+                <option value="63">63: 63: Sign Post</option>
+                <option value="64">64: Wooden Door</option>
+                <option value="65">65: Ladder</option>
+                <option value="66">66: Minecart Tracks</option>
+                <option value="67">67: Cobblestone Stairs</option>
+                <option value="68">68: Wall Sign</option>
+                <option value="69">69: Lever</option>
+                <option value="70">70: Stone Pressure Plate</option>
+                <option value="71">71: Iron Door</option>
+                <option value="72">72: Wooden Pressure Plate</option>
+                <option value="73">73: Redstone Ore</option>
+                <option value="74">74: Glowing Redstone Ore</option>
+                <option value="75">75: Redstone torch ("off" state)</option>
+                <option value="76">76: Redstone torch ("on" state)</option>
+                <option value="77">77: Stone Button</option>
+                <option value="78">78: Snow</option>
+                <option value="79">79: Ice</option>
+                <option value="80">80: Snow Block</option>
+                <option value="81">81: Cactus</option>
+                <option value="82">82: Clay</option>
+                <option value="83">83: Sugar Cane</option>
+                <option value="84">84: Jukebox</option>
+                <option value="85">85: Fence</option>
+                <option value="86">86: 86: Pumpkin</option>
+                <option value="87">87: Netherrack</option>
+                <option value="88">88: Soul Sand</option>
+                <option value="89">89: Glowstone</option>
+                <option value="90">90: Portal</option>
+                <option value="91">91: Jack-O-Lantern</option>
+                <option value="92">92: Cake Block</option>
           </select>
       </div>
       <div id="center"><div id="fig">
     <script type="text/javascript+protovis">
 
-var curGraph = 3;
+var curGraph = 2;
 var data = rawdata[curGraph];
 
 /* Sizing and scales. */
@@ -39,7 +120,7 @@ var vis = new pv.Panel()
     .width(w)
     .height(h)
     .bottom(20)
-    .left(40)
+    .left(50)
     .right(10)
     .top(5);
 
