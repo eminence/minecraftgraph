@@ -5,17 +5,18 @@
     <script type="text/javascript" src="https://andrewchin.net/vis/protovis-3.2/protovis-r3.2.js"></script>
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.min.js"></script>
     <script type="text/javascript" src="data.js"></script>
+    <script type="text/javascript" src="data2.js"></script>
     <style type="text/css">
 
-#fig {
-  width: 430px;
-  height: 225px;
-}
-
+        td {
+            vertical-align: top;
+        }
 
     </style>
   </head>
   <body>
+      <table><tr><td>
+          
       <div style="width: 100%; background:#eee;">
           Mineral: <select onchange="selectMineral(this)">
                 <option value="0">0: Air</option>
@@ -103,14 +104,14 @@
                 <option value="92">92: Cake Block</option>
           </select>
       </div>
-      <div id="center"><div id="fig">
+          <div id="fig1" >
     <script type="text/javascript+protovis">
 
 var curGraph = 2;
 var data = rawdata[curGraph];
 
 /* Sizing and scales. */
-var w = document.body.clientWidth - 80,
+var w = document.body.clientWidth - 500,
     h = 400,
     x = pv.Scale.linear(0, 128).range(0, w),
     y = pv.Scale.linear(0, pv.max(data)).range(0, h);
@@ -161,7 +162,7 @@ function selectMineral(e) {
 
 function switchGraph(x) {
     if (x < 0) x = curGraph;
-    w = document.body.clientWidth - 80;
+    w = document.body.clientWidth - 500;
     vis.width(w);
     data = rawdata[x];
     y = pv.Scale.linear(0, pv.max(data)).range(0, h);
@@ -182,5 +183,53 @@ jQuery(window).resize(function() {
         });
 
     </script>
-  </div></div></body>
+  </div>
+  </td><td>
+      <div style="width: 100%; background:#eee;">
+          Level: <select>
+          
+          </select>
+
+
+      </div>
+
+  <div id="fig2">
+      <script type="text/javascript+protovis">
+
+          /* Sizing and scales. */
+      var data2 = leveldata[62];
+      var w2 = 400,
+      h2 = 400,
+      r = w2 / 2,
+      a = pv.Scale.linear(0, pv.sum(data2, function (d) d.count)).range(0, 2 * Math.PI);
+
+/* The root panel. */
+    var vis2 = new pv.Panel()
+.width(w2)
+    .height(h2);
+
+    /* The wedge, with centered label. */
+    vis2.add(pv.Wedge)
+    .data(data2)
+    .bottom(w2 / 2)
+    .left(w2 / 2)
+    .innerRadius(r - 40)
+    .outerRadius(r)
+.angle(function(d) a(d.count))
+    .event("mouseover", function() this.innerRadius(0))
+    .event("mouseout", function() this.innerRadius(r - 40))
+    .anchor("center").add(pv.Label)
+    .visible(function(d) a(d.count) > 0.1)
+.textAngle(0)
+    .text(function(d) d.blockType);
+
+    vis2.render();
+
+    </script>
+
+  </div>
+
+  </tr>
+  
+  </table></body>
 </html>

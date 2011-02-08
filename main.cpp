@@ -49,6 +49,9 @@ void updateBlockCounts(const char *path, char *table) {
 
 void printReport(const char *path, char*table) {
 
+
+    // material distribution by level, for each material
+
     FILE *f = fopen(path, "w");
     fprintf(f, "var rawdata=[];\n\n");
 
@@ -65,6 +68,28 @@ void printReport(const char *path, char*table) {
 
     }
     fclose(f);
+
+
+    // material distribution by material, for each level
+    f = fopen("data2.js", "w");
+    fprintf(f, "var leveldata=[];\n\n");
+
+    for (int y = 0; y < 128; y++) {
+        uint64_t (*blockCounts)[256] = (uint64_t(*)[256])(table + (y * 256 * sizeof(uint64_t)));
+        // for this level, produce sums for each material
+        //uint64_t sums[256] = {0};
+
+        fprintf(f, "leveldata[%d] = [", y);
+        for(unsigned int blockType = 0; blockType < 100; blockType++) {
+            fprintf(f, "{blockType: %u, count: %lld}, ", blockType, (*blockCounts)[blockType]);
+        }
+        fprintf(f, "];\n");
+
+    }
+    
+
+    fclose(f);
+
 }
 
 
