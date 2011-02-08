@@ -16,7 +16,8 @@
 void updateBlockCounts(const char *path, char *table) {
     gzFile dat = gzopen(path,"rb");
     if (dat == NULL) {
-        printf("failed to open file\n");
+        printf("failed to open file: %s\n", path);
+        perror("gzopen");
         exit(1);
     }
     
@@ -41,7 +42,7 @@ void updateBlockCounts(const char *path, char *table) {
         }
     }
 
-
+    gzclose(dat);
 
 }
 
@@ -57,7 +58,7 @@ void printReport(const char *path, char*table) {
         for (int y = 0;  y < 128; y++) {
             uint64_t (*blockCounts)[256] = (uint64_t(*)[256])(table + (y * 256 * sizeof(uint64_t)));
             uint64_t count = (*blockCounts)[blockType];
-            fprintf(stderr, "%u: %lld\n", y, count);
+            //fprintf(stderr, "%u: %lld\n", y, count);
             fprintf(f, "%lld, ", count);
         }
         fprintf(f,"];\n");
@@ -85,15 +86,17 @@ int main(int argc, char **argv) {
 
    
 
-
+    unsigned int numChunks = 0;
     for (int x = 1; x < argc; x++)  {
         fprintf(stderr,".");
         updateBlockCounts(argv[x], blockTable);
+        numChunks++;
         fflush(stderr);
     }
     //updateBlockCounts(argv[2], &blockCounts);
 
     fprintf(stderr, "\n-- REPORT --\n");
+    fprintf(stderr, "Read %u chunks\n", numChunks);
 
     printReport("data.js", blockTable); 
     
