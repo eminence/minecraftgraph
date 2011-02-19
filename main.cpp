@@ -4,13 +4,17 @@
 
 #include <zlib.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <errno.h>
+
 
 #include <list>
 
 // Local includes
 #include "nbt.h"
 
-#define getBlock(blockThing, x,y,z) blockThing[ y + ( z * 128 + ( x * 16 * 16) ) ]
+#define getBlock(blockThing, x,y,z) blockThing[ y + ( z * 128 + ( x * 128 * 16) ) ]
 
 
 void updateBlockCounts(const char *path, char *table) {
@@ -28,7 +32,8 @@ void updateBlockCounts(const char *path, char *table) {
 
     // print the first level
     for (int y = 0; y < 128; y++)  {
-        
+
+        // get the table for this level        
         uint64_t (*blockCounts)[256] = (uint64_t(*)[256])(table + (y * 256 * sizeof(uint64_t)));
 
         for (int x = 0; x < 16; x++) {
@@ -92,6 +97,35 @@ void printReport(const char *path, char*table) {
 
 }
 
+void usage() {
+    printf("");
+}
+
+void walkDir(const char*path, char*table) {
+    // find 
+    DIR *root = opendir(path);
+    char nextdir[256];
+    char fullname[256];
+    struct dirent *entry;
+    if (root == NULL) {
+        fprintf(stderr, "Failed to opendir(%s): %s\n\n", path, strerror(errno));
+        exit(1);
+    }
+    while((entry = readdir(root)) != NULL) {
+        if (entry->d_type == 4 && entry->d_name[0] != '.') {
+            sprintf(nextdir, "%s/%s\0", path, entry->d_name);
+            walkDir(nextdir, table);
+        } else if (entry->d_type == 8 && entry->d_name[0] == 'c') {
+            fprintf(stderr, ".");
+            sprintf(fullname, "%s/%s\0", path, entry->d_name);
+            updateBlockCounts(fullname, table);
+
+        }
+
+    }
+    closedir(root);
+
+}
 
 int main(int argc, char **argv) {
 
@@ -109,19 +143,11 @@ int main(int argc, char **argv) {
     memset(blockTable, 0, toMalloc);
     fprintf(stderr, "ok.\n");
 
-   
+    walkDir(argv[1], blockTable);
 
-    unsigned int numChunks = 0;
-    for (int x = 1; x < argc; x++)  {
-        fprintf(stderr,".");
-        updateBlockCounts(argv[x], blockTable);
-        numChunks++;
-        fflush(stderr);
-    }
-    //updateBlockCounts(argv[2], &blockCounts);
 
     fprintf(stderr, "\n-- REPORT --\n");
-    fprintf(stderr, "Read %u chunks\n", numChunks);
+    //fprintf(stderr, "Read %u chunks\n", numChunks);
 
     printReport("data.js", blockTable); 
     
