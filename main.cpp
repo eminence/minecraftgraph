@@ -16,14 +16,110 @@
 
 #define getBlock(blockThing, x,y,z) blockThing[ y + ( z * 128 + ( x * 128 * 16) ) ]
 
+// forwards
+void updateBlockCounts(z_streamp dat, char *table);
 
-void updateBlockCounts(const char *path, char *table) {
-    gzFile dat = gzopen(path,"rb");
-    if (dat == NULL) {
-        printf("failed to open file: %s\n", path);
-        perror("gzopen");
+
+typedef struct gz_stream {
+    z_stream stream;
+    int      z_err;   /* error code for last stream operation */
+    int      z_eof;   /* set if end of input file */
+    FILE     *file;   /* .gz file */
+    Byte     *inbuf;  /* input buffer */
+    Byte     *outbuf; /* output buffer */
+    uLong    crc;     /* crc32 of uncompressed data */
+    char     *msg;    /* error message */
+    char     *path;   /* path name for debugging only */
+    int      transparent; /* 1 if input file is not a .gz file */
+    char     mode;    /* 'w' or 'r' */
+#ifdef _LARGEFILE64_SOURCE
+    off64_t  start;   /* start of compressed data in file (header skipped) */
+    off64_t  in;      /* bytes into deflate or inflate */
+    off64_t  out;     /* bytes out of deflate or inflate */
+#else
+    z_off_t  start;   /* start of compressed data in file (header skipped) */
+    z_off_t  in;      /* bytes into deflate or inflate */
+    z_off_t  out;     /* bytes out of deflate or inflate */
+#endif
+    int      back;    /* one character push-back */
+    int      last;    /* true if push-back is last character */
+} gz_stream;
+
+
+void readRegion(const char *path, char *table) {
+
+    FILE *f = fopen(path, "rb");
+    if (!f) {
+        perror("fopen");
         exit(1);
     }
+
+
+
+    for (int x = 0; x < 32; x++) {
+        for (int z = 0; z < 32; z++) {
+            // TODO speed this up by reading linearly and deriving x and z from offset
+            unsigned int offset = 4 * ((x % 32) + (z % 32) * 32);
+            //  seek into the locations field
+            fseek(f, offset, SEEK_SET);
+
+            uint32_t s=0;
+            // read 3 bytes
+            fread(((char*)&s)+1, 1, 3, f);
+            uint32_t chunk_loc = ntohl(s);
+
+            char sec_count;
+            fread(&sec_count, 1, 1, f);
+
+            if (chunk_loc > 0 && sec_count > 0) {
+                //fprintf(stderr, "location offset for %d,%d: %u\tsec_count: %hhu\n", x, z, chunk_loc, sec_count);
+                fseek(f, 4096 * chunk_loc, SEEK_SET);
+                // read in 4 bytes for the size:
+                fread((char*)&s, 1, 4, f);
+                uint32_t chunk_size = ntohl(s);
+
+                // read in 1 byte for the compression type
+                char compress_type;
+                fread(&compress_type, 1, 1, f);
+                assert(compress_type == 1 || compress_type == 2);
+                //fprintf(stderr, "  chunk has size %d bytes \t compressed with %hhu\n", chunk_size, compress_type);
+                
+                // read in compressed data
+                unsigned char *data = (unsigned char*)malloc(chunk_size);
+                fread(data, 1, chunk_size, f);
+
+                z_streamp dfs = (z_streamp)malloc(sizeof(z_stream));
+                memset(dfs, 0, sizeof(z_stream));
+                dfs->next_in = data;
+                dfs->avail_in = chunk_size;
+                assert(inflateInit(dfs) == Z_OK);
+                
+                unsigned char abyte;
+                dfs->next_out = &abyte;
+                dfs->avail_out = 1;
+                assert(dfs->total_out == 0);
+
+                updateBlockCounts(dfs, table);
+
+                assert(inflateEnd(dfs) == Z_OK);
+                free(dfs);
+                free(data);
+
+
+
+            }
+
+
+
+        }
+    }
+    fclose(f);
+    return;
+}
+
+
+void updateBlockCounts(z_streamp dat, char *table) {
+
     
     NBT_Compound root(dat); 
     
@@ -47,7 +143,6 @@ void updateBlockCounts(const char *path, char *table) {
         }
     }
 
-    gzclose(dat);
 
 }
 
@@ -98,7 +193,7 @@ void printReport(const char *path, char*table) {
 }
 
 void usage() {
-    printf("");
+    printf("\n");
 }
 
 void walkDir(const char*path, char*table) {
@@ -113,12 +208,13 @@ void walkDir(const char*path, char*table) {
     }
     while((entry = readdir(root)) != NULL) {
         if (entry->d_type == 4 && entry->d_name[0] != '.') {
-            sprintf(nextdir, "%s/%s\0", path, entry->d_name);
+            sprintf(nextdir, "%s/%s", path, entry->d_name);
             walkDir(nextdir, table);
-        } else if (entry->d_type == 8 && entry->d_name[0] == 'c') {
+        } else if (entry->d_type == 8 && entry->d_name[0] == 'r' && entry->d_name[1] == '.') {
+            sprintf(fullname, "%s/%s", path, entry->d_name);
             fprintf(stderr, ".");
-            sprintf(fullname, "%s/%s\0", path, entry->d_name);
-            updateBlockCounts(fullname, table);
+            fflush(stderr);
+            readRegion(fullname, table);
 
         }
 
@@ -150,6 +246,8 @@ int main(int argc, char **argv) {
     //fprintf(stderr, "Read %u chunks\n", numChunks);
 
     printReport("data.js", blockTable); 
+
+    free(blockTable);
     
     /*  Test code:  TODO, move this elsewhere
 

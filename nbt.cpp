@@ -16,15 +16,39 @@ void gzAssert(gzFile gz, int actual, int expected) {
 
 }
 
+
+/**
+ * Reads len bytes into buf.  opaque is some unknown
+ * data structure, to keep this interface unchagned
+ */
+int nbt_read(z_streamp dfs, void*buf, size_t len) {
+
+    if (len == 0) 
+        return 0;
+    assert(len > 0);
+    dfs->next_out = (unsigned char*)buf;
+    dfs->avail_out = len;
+    int ret;
+    if ((ret = inflate(dfs, 1)) != Z_OK) {
+        return -1; 
+        //assert(ret == Z_OK);
+    }
+
+    // note that avail_in and next_in will be updated 
+    // automatically
+    return len;
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // NBT_Int
 ////////////////////////////////////////////////////////////////////////////////
-NBT_Int::NBT_Int(gzFile gz) {
+NBT_Int::NBT_Int(z_streamp gz) {
     type = TAG_Int;
 
     // grab 4 bytes
     int buf;
-    assert(gzread(gz, &buf, 4) == 4);
+    assert(nbt_read(gz, &buf, 4) == 4);
     int_data = ntohl(buf);
 
     size = 4;
@@ -65,7 +89,7 @@ NBT_List::~NBT_List() {
     }
 }
 
-NBT_List::NBT_List(gzFile gz) {
+NBT_List::NBT_List(z_streamp gz) {
     type = TAG_List;
 
     // list types
@@ -201,9 +225,9 @@ NBT_List::print(int indent) {
 ////////////////////////////////////////////////////////////////////////////////
 // NBT_Double
 ////////////////////////////////////////////////////////////////////////////////
-NBT_Double::NBT_Double(gzFile gz) {
+NBT_Double::NBT_Double(z_streamp gz) {
     type = TAG_Double;
-    assert(gzread(gz, &_data, 8) == 8);
+    assert(nbt_read(gz, &_data, 8) == 8);
 }
 
 NBT_Double::NBT_Double(char *data) {
@@ -228,11 +252,11 @@ void NBT_Double::print(int indent) {
 ////////////////////////////////////////////////////////////////////////////////
 // NBT_Compound
 ////////////////////////////////////////////////////////////////////////////////
-NBT_Compound::NBT_Compound(gzFile gz) {
+NBT_Compound::NBT_Compound(z_streamp gz) {
     type = TAG_Compound;
 
     char next_type;
-    assert(gzread(gz, &next_type, 1) == 1);
+    assert(nbt_read(gz, &next_type, 1) == 1);
     while (next_type != TAG_End) {
         //printf("next type: %d\n", next_type);
 
@@ -283,8 +307,8 @@ NBT_Compound::NBT_Compound(gzFile gz) {
         _list.push_front(ele);
 
 
-        //gzAssert(gz, gzread(gz, &next_type, 1), 1);
-        if (gzread(gz, &next_type, 1) != 1)
+        //gzAssert(gz, nbt_read(gz, &next_type, 1), 1);
+        if (nbt_read(gz, &next_type, 1) != 1)
             return;
 
 
@@ -404,7 +428,7 @@ void NBT_Compound::print(int indent) {
 
 
 
-NBT_String::NBT_String(gzFile gz) {
+NBT_String::NBT_String(z_streamp gz) {
     type = TAG_String;
     NBT_Short len(gz);
 
@@ -412,7 +436,7 @@ NBT_String::NBT_String(gzFile gz) {
     //printf("NBT_String; len: %d\n", l);
 
     char *buf = (char *)malloc(l);
-    int r =  gzread(gz, buf, l);
+    int r =  nbt_read(gz, buf, l);
     assert(r == l);
 
     buff = new string(buf, l);
@@ -455,9 +479,9 @@ void NBT_String::print(int indent) {
 //  NBT_Float
 ////////////////////////////////////////////////////////////////////////////////
 
-NBT_Float::NBT_Float(gzFile gz) {
+NBT_Float::NBT_Float(z_streamp gz) {
     type = TAG_Float;
-    assert(gzread(gz, &_data, 4) == 4);
+    assert(nbt_read(gz, &_data, 4) == 4);
     size=4;
 }
 
@@ -484,10 +508,10 @@ void NBT_Float::print(int indent) {
 ////////////////////////////////////////////////////////////////////////////////
 //  NBT_Short
 ////////////////////////////////////////////////////////////////////////////////
-NBT_Short::NBT_Short(gzFile gz) {
+NBT_Short::NBT_Short(z_streamp gz) {
     type = TAG_Short;
     int buf;
-    assert(gzread(gz, &buf, 2) == 2);
+    assert(nbt_read(gz, &buf, 2) == 2);
     int_data = ntohs(buf);
 }
 
@@ -515,7 +539,7 @@ void NBT_Short::print(int indent) {
 ////////////////////////////////////////////////////////////////////////////////
 //  NBT_Byte_Array
 ////////////////////////////////////////////////////////////////////////////////
-NBT_Byte_Array::NBT_Byte_Array(gzFile gz) {
+NBT_Byte_Array::NBT_Byte_Array(z_streamp gz) {
     type = TAG_Byte_Array;
 
     NBT_Int len(gz);
@@ -525,7 +549,7 @@ NBT_Byte_Array::NBT_Byte_Array(gzFile gz) {
     assert(buff != NULL);
 
     _length = l;
-    assert(gzread(gz, buff, l) == l);
+    assert(nbt_read(gz, buff, l) == l);
 
 
 }
@@ -565,9 +589,9 @@ void NBT_Byte_Array::print(int indent) {
 ////////////////////////////////////////////////////////////////////////////////
 // NBT_Byte
 ////////////////////////////////////////////////////////////////////////////////
-NBT_Byte::NBT_Byte(gzFile gz) {
+NBT_Byte::NBT_Byte(z_streamp gz) {
     type = TAG_Byte;
-    assert(gzread(gz, &_data, 1) == 1);
+    assert(nbt_read(gz, &_data, 1) == 1);
 
 }
 NBT_Byte::NBT_Byte(char *data) {
@@ -590,9 +614,9 @@ void NBT_Byte::print(int indent) {
 ////////////////////////////////////////////////////////////////////////////////
 // NBT_Long
 ////////////////////////////////////////////////////////////////////////////////
-NBT_Long::NBT_Long(gzFile gz) {
+NBT_Long::NBT_Long(z_streamp gz) {
     type = TAG_Long;
-    assert(gzread(gz, &_data, 8) == 8);
+    assert(nbt_read(gz, &_data, 8) == 8);
 
 
 }

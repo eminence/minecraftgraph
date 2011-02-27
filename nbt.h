@@ -34,6 +34,7 @@ class NBT_Tag {
         TAG_Type type;
         string name;
         NBT_Tag() {};
+        virtual ~NBT_Tag() {}
         unsigned int size;
         virtual void print(int indent = 0) = 0;
 };
@@ -48,7 +49,7 @@ class NBT_Compound : public NBT_Tag {
 class NBT_Int : public NBT_Tag {
     public:
         NBT_Int(const char* data);
-        NBT_Int(gzFile gz);
+        NBT_Int(z_streamp gz);
         int getValue() {return int_data; }
         operator int() {return int_data; } 
         void print(int indent);
@@ -60,7 +61,7 @@ class NBT_Int : public NBT_Tag {
 class NBT_Short : public NBT_Tag {
     public:
         NBT_Short(char* data);
-        NBT_Short(gzFile gz);
+        NBT_Short(z_streamp gz);
         short getValue() {return int_data; }
         operator short() {return int_data; } 
         void print(int indent);
@@ -72,7 +73,7 @@ class NBT_Short : public NBT_Tag {
 class NBT_String: public NBT_Tag  {
     public:
         NBT_String(char *data);
-        NBT_String(gzFile);
+        NBT_String(z_streamp);
         ~NBT_String();
         string getString() { return *buff; }
         void print(int indent);
@@ -85,7 +86,7 @@ class NBT_String: public NBT_Tag  {
 class NBT_Byte_Array: public NBT_Tag  {
     public:
         NBT_Byte_Array(char *data);
-        NBT_Byte_Array(gzFile);
+        NBT_Byte_Array(z_streamp);
         ~NBT_Byte_Array();
         int length() {return _length;};
         void print(int indent);
@@ -98,7 +99,7 @@ class NBT_Byte_Array: public NBT_Tag  {
 class NBT_Long: public NBT_Tag  {
     public:
         NBT_Long(char *data);
-        NBT_Long(gzFile);
+        NBT_Long(z_streamp);
         void print(int indent);
     private:
         uint64_t _data;
@@ -108,7 +109,7 @@ class NBT_Long: public NBT_Tag  {
 class NBT_Float: public NBT_Tag  {
     public:
         NBT_Float(char *data);
-        NBT_Float(gzFile gz);
+        NBT_Float(z_streamp gz);
         void print(int indent);
     private:
         uint32_t _data;
@@ -118,7 +119,7 @@ class NBT_Float: public NBT_Tag  {
 class NBT_Double: public NBT_Tag  {
     public:
         NBT_Double(char *data);
-        NBT_Double(gzFile gz);
+        NBT_Double(z_streamp gz);
         void print(int indent);
     private:
         uint64_t _data;
@@ -128,7 +129,7 @@ class NBT_Double: public NBT_Tag  {
 class NBT_Byte: public NBT_Tag  {
     public:
         NBT_Byte(char *data);
-        NBT_Byte(gzFile);
+        NBT_Byte(z_streamp);
         char getByte() { return _data; };
         void print(int indent);
     private:
@@ -140,7 +141,7 @@ class NBT_Byte: public NBT_Tag  {
 class NBT_List: public NBT_Tag {
     public:
         NBT_List(char *data);
-        NBT_List(gzFile);
+        NBT_List(z_streamp);
         ~NBT_List();
 
         TAG_Type getListType() { return _type;};
@@ -156,7 +157,7 @@ class NBT_List: public NBT_Tag {
 class NBT_Compound: public NBT_Tag {
     public:
         NBT_Compound(char *data);
-        NBT_Compound(gzFile gz);
+        NBT_Compound(z_streamp gz);
         ~NBT_Compound();
 
         void print(int indent);
