@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <iostream>
 #include <stdlib.h>
 
 #include <zlib.h>
@@ -19,31 +18,6 @@
 // forwards
 void updateBlockCounts(z_streamp dat, char *table);
 
-
-typedef struct gz_stream {
-    z_stream stream;
-    int      z_err;   /* error code for last stream operation */
-    int      z_eof;   /* set if end of input file */
-    FILE     *file;   /* .gz file */
-    Byte     *inbuf;  /* input buffer */
-    Byte     *outbuf; /* output buffer */
-    uLong    crc;     /* crc32 of uncompressed data */
-    char     *msg;    /* error message */
-    char     *path;   /* path name for debugging only */
-    int      transparent; /* 1 if input file is not a .gz file */
-    char     mode;    /* 'w' or 'r' */
-#ifdef _LARGEFILE64_SOURCE
-    off64_t  start;   /* start of compressed data in file (header skipped) */
-    off64_t  in;      /* bytes into deflate or inflate */
-    off64_t  out;     /* bytes out of deflate or inflate */
-#else
-    z_off_t  start;   /* start of compressed data in file (header skipped) */
-    z_off_t  in;      /* bytes into deflate or inflate */
-    z_off_t  out;     /* bytes out of deflate or inflate */
-#endif
-    int      back;    /* one character push-back */
-    int      last;    /* true if push-back is last character */
-} gz_stream;
 
 
 void readRegion(const char *path, char *table) {
